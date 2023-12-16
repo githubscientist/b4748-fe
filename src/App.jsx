@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useState } from 'react';
-import axios from 'axios';
+import RegisterForm from './components/RegisterForm';
+import LoginForm from './components/LoginForm';
+import Dashboard from './components/Dashboard';
 
 function App() {
 
@@ -10,83 +12,60 @@ function App() {
     password: '',
   });
 
-  const handleRegister = async (event) => {
-    event.preventDefault();
-    
-    const newUser = {
-      username: registerFormData.username,
-      name: registerFormData.name,
-      password: registerFormData.password,
-    };
+  const [loginFormData, setLoginFormData] = useState({
+    username: '',
+    password: ''
+  });
 
-    console.log('Registering user...');
-    let response;
-    let data;
-    try {
-      response = await axios.post('http://localhost:3001/api/users', newUser);
-      data = response.data;
-      console.log('User registered successfully');
-    } catch (error) {
-      // check if the error code is 409
-      if (error.response.status === 409) {
-        console.log('Username already exists');
-      } else if (error.response.status === 404) {
-        console.log('Registering user failed');
-      }
+  const [isRegistered, setIsRegistered] = useState(false);
+  const [user, setUser] = useState(null);
+  const [token, setToken] = useState(null);
+
+  useEffect(() => {
+    const user = window.localStorage.getItem('user');
+    const token = window.localStorage.getItem('token');
+
+    if (user && token) {
+      setUser(JSON.parse(user));
+      setToken(token);
     }
-  }
+  }, []);
 
   return (
     <div>
       <h1>Notes Application</h1>
 
-      <div>
-        <form onSubmit={handleRegister}>
-          <div>
-            <input 
-              type='email'
-              placeholder='Email...'
-              value={registerFormData.username}
-              onChange={(event) => {
-                setRegisterFormData({
-                  ...registerFormData,
-                  username: event.target.value,
-                })
-              }}
-            />
-          </div>
-
-          <div>
-            <input 
-              type='text'
-              placeholder='Name...'
-              value={registerFormData.name}
-              onChange={(event) => {
-                setRegisterFormData({
-                  ...registerFormData,
-                  name: event.target.value,
-                })
-              }}
-            />
-          </div>
-
-          <div>
-            <input 
-              type='password'
-              placeholder='Password...'
-              value={registerFormData.password}
-              onChange={(event) => {
-                setRegisterFormData({
-                  ...registerFormData,
-                  password: event.target.value,
-                })
-              }}
-            />
-          </div>
-
-          <button type='submit'>Register</button>
-        </form>
-      </div>
+      {
+        user ? (
+          <Dashboard 
+            user={user}
+            setUser={setUser}
+            token={token}
+            setToken={setToken}
+            setIsRegistered={setIsRegistered}
+          />
+        ) : (
+            isRegistered ? (
+              <LoginForm 
+                loginFormData={loginFormData}
+                setLoginFormData={setLoginFormData}
+                isRegistered={isRegistered}
+                setIsRegistered={setIsRegistered}
+                user={user}
+                setUser={setUser}
+                token={token}
+                setToken={setToken}
+              />
+            ) : (
+              <RegisterForm 
+                registerFormData={registerFormData}
+                  setRegisterFormData={setRegisterFormData}
+                  isRegistered={isRegistered}
+                  setIsRegistered={setIsRegistered}
+              />   
+            )
+        )
+      }
     </div>
   )
 }
